@@ -33,7 +33,7 @@ def read_source():
 
 
 def listing_is_product(listing, product):
-    '''Matching Algorithm.
+    '''Simple Matching Algorithm.
 
     Params:
         listing (dict): listing from listings.txt
@@ -42,11 +42,9 @@ def listing_is_product(listing, product):
     Returns:
         bool: True if listing and product match, False otherwise.
     '''
-    # TODO stemming and tokenizing title/family/model
-
-    title = listing['title'].lower()
-    family = product.get('family', '').lower()
-    model = product['model'].lower()
+    title = listing['title'].lower().replace('-', '')
+    family = product.get('family', '').lower().replace('-', '')
+    model = product['model'].lower().replace('-', '')
 
     if model in title:
         if family and family in title:

@@ -8,30 +8,6 @@ listings = {}
 results = []
 
 
-def read_source():
-    '''Read source files.
-
-    Returns:
-        products (list): list of product dictionaries.
-        listings (dict): listings dictionary indexed by manufacturer.
-    '''
-    with codecs.open('products.txt', encoding='ascii') as products_file:
-        for product in products_file:
-            products.append(json.loads(product))
-
-    with codecs.open('listings.txt', encoding='utf-8') as listings_file:
-        for _listing in listings_file:
-            listing = json.loads(_listing)
-            manufacturer = listing['manufacturer'].lower() or u'brandless'
-
-            if manufacturer in listings:
-                listings[manufacturer].append(listing)
-            else:
-                listings[manufacturer] = [listing]
-
-    return products, listings
-
-
 def listing_is_product(listing, product):
     '''Simple Matching Algorithm.
 
@@ -42,9 +18,13 @@ def listing_is_product(listing, product):
     Returns:
         bool: True if listing and product match, False otherwise.
     '''
-    title = listing['title'].lower().replace('-', '')
-    family = product.get('family', '').lower().replace('-', '')
-    model = product['model'].lower().replace('-', '')
+    def clean(input):
+        # TODO handle spaces in models: e.g: SP-600UZ vs SP-600 UZ
+        return input.lower().replace('-', '')
+
+    title = clean(listing['title'])
+    family = clean(product.get('family', ''))
+    model = clean(product['model'])
 
     if model in title:
         if family and family in title:
@@ -72,6 +52,29 @@ def find_results():
             {'product_name': product_name, 'listings': _results[product_name]}
         )
 
+
+def read_source():
+    '''Read source files.
+
+    Returns:
+        products (list): list of product dictionaries.
+        listings (dict): listings dictionary indexed by manufacturer.
+    '''
+    with codecs.open('products.txt', encoding='ascii') as products_file:
+        for product in products_file:
+            products.append(json.loads(product))
+
+    with codecs.open('listings.txt', encoding='utf-8') as listings_file:
+        for _listing in listings_file:
+            listing = json.loads(_listing)
+            manufacturer = listing['manufacturer'].lower() or u'brandless'
+
+            if manufacturer in listings:
+                listings[manufacturer].append(listing)
+            else:
+                listings[manufacturer] = [listing]
+
+    return products, listings
 
 if __name__ == '__main__':
     read_source()

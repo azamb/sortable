@@ -3,30 +3,37 @@
 
 import json
 
-# List of products that may have bad matches.
-suspect_products = []
 
+def find_price_anomalies(results):
+    '''Loop through results found by matching.py to find
+    product with bad matches based on large price differences
+    among the matched listings.
 
-def find_price_anomalies(results, price_gap):
+    Params:
+        results (list): list of dictionaries containing all matches found.
+
+    Returns:
+        suspect_products (list): List of products that may have bad matches.
     '''
-        TODO docstring
-    '''
+    suspect_products = []
+    price_delta = 200.0
+
     for result in results:
         listings = result['listings']
-        prices = [
-            round(float(listing['price']), 2) for listing in listings
-        ]
-        prices.sort()
-        buckets = [[prices[0]]]
+        if len(listings) > 1:
+            prices = [
+                round(float(listing['price']), 2) for listing in listings
+            ]
 
-        for price in prices[1:]:
-            if abs(price - buckets[-1][-1]) <= price_gap:
-                buckets[-1].append(price)
-            else:
-                buckets.append([price])
+            prices.sort()
+            min_price = prices[0]
 
-        if len(buckets) > 2:
-            suspect_products.append(result)
+            for price in prices[1:]:
+                if price - min_price >= price_delta:
+                    suspect_products.append(result)
+                    break
+
+    return suspect_products
 
 
 def read_source():
@@ -35,13 +42,12 @@ def read_source():
     Returns:
         results (list): list of result dictionaries.
     '''
-    with open('results.json') as results_file:
+    with open('results.txt') as results_file:
         return json.load(results_file)
-
 
 if __name__ == '__main__':
     results = read_source()
-    find_price_anomalies(results, 200.00)
+    suspects = find_price_anomalies(results)
 
-    with open('suspects.json', 'w') as suspects_file:
-        json.dump(suspect_products, suspects_file, indent=4)
+    with open('tests/suspects.json', 'w') as suspects_file:
+        json.dump(suspects, suspects_file, indent=4)

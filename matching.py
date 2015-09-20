@@ -3,10 +3,6 @@
 import json
 import codecs
 
-products = []
-listings = {}
-results = []
-
 
 def listing_is_product(listing, product):
     '''Simple Matching Algorithm.
@@ -16,10 +12,9 @@ def listing_is_product(listing, product):
         product (dict): product from products.txt
 
     Returns:
-        bool: True if listing and product match, False otherwise.
+        bool: True if family and model are in title, False otherwise.
     '''
     def clean(input):
-        # TODO handle spaces in models: e.g: SP-600UZ vs SP-600 UZ
         return input.lower().replace('-', '')
 
     title = clean(listing['title'])
@@ -32,25 +27,34 @@ def listing_is_product(listing, product):
     return False
 
 
-def find_results():
+def get_results(products, listings):
+    '''Loop through products and listings to find matches.
+
+    Params:
+        products (list): list of product dictionaries read from products.txt
+        listings (dict): listings dictionary indexed by manufacturer
+
+    Returns:
+        results (list): list of dictionaries containing all matches found.
     '''
-    TODO Write docstring
-    '''
-    _results = {}
+    matches = {}
+    results = []
 
     for product in products:
         _listings = listings.get(product['manufacturer'].lower(), [])
-        for _listing in _listings:
-            if listing_is_product(_listing, product):
-                if _results.get(product['product_name']):
-                    _results[product['product_name']].append(_listing)
+        for listing in _listings:
+            if listing_is_product(listing, product):
+                if matches.get(product['product_name']):
+                    matches[product['product_name']].append(listing)
                 else:
-                    _results[product['product_name']] = [_listing]
+                    matches[product['product_name']] = [listing]
 
-    for product_name in _results:
+    for product_name in matches:
         results.append(
-            {'product_name': product_name, 'listings': _results[product_name]}
+            {'product_name': product_name, 'listings': matches[product_name]}
         )
+
+    return results
 
 
 def read_source():
@@ -60,6 +64,9 @@ def read_source():
         products (list): list of product dictionaries.
         listings (dict): listings dictionary indexed by manufacturer.
     '''
+    products = []
+    listings = {}
+
     with codecs.open('products.txt', encoding='ascii') as products_file:
         for product in products_file:
             products.append(json.loads(product))
@@ -77,7 +84,7 @@ def read_source():
     return products, listings
 
 if __name__ == '__main__':
-    read_source()
-    find_results()
-    with open('results.json', 'w') as results_file:
+    products, listings = read_source()
+    results = get_results(products, listings)
+    with open('results.txt', 'w') as results_file:
         json.dump(results, results_file, indent=4)
